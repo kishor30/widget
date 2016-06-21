@@ -1,0 +1,144 @@
+<link rel="import" href="../polymer/polymer.html"/>
+<dom-module id="data-source-configuration">
+    <link rel="import" type="css" href="css/data-source-configuration.css" />
+    <template>
+
+        <div id="data-source-block" class="datasource-configuration-container" hidden$="{{ishiddenDatasourceList}}">
+            <div class="data-source-controls-container">
+                <span>Plotted </span><span>Data</span>
+            </div>
+            <div hidden$="{{ishiddenDatasourceBlock}}" class="datasource--list--block">
+
+                <div class="datasource--list--row">
+                    <span class="label-container">Data Source</span>
+                    <div class="dropdown-container">
+                        <px-dropdown display-value="Select" id="data_source_id">
+                            <px-dropdown-content extend-dropdown="true" extend-dropdown-by="25" max-cont-character-width="10" items='{{dataSourceList}}'>
+                            </px-dropdown-content>
+                        </px-dropdown>
+                    </div>
+                </div>
+                <div class="datasource--list--row">
+                    <span class="label-container">X-axis</span>
+                    <div class="dropdown-container">
+                        <px-dropdown display-value="Select" id="x_axis_id">
+                            <px-dropdown-content extend-dropdown="true" extend-dropdown-by="25" max-cont-character-width="10" items='{{curXaxis}}'>
+                            </px-dropdown-content>
+                        </px-dropdown>
+                    </div>
+                </div>
+                <div class="datasource--list--row">
+                    <span class="label-container">Column</span>
+                    <div class="dropdown-container">
+                        <px-dropdown display-value="Select" id="column_id">
+                            <px-dropdown-content extend-dropdown="true" extend-dropdown-by="25" max-cont-character-width="10" items='{{curColumn}}'>
+                            </px-dropdown-content>
+                        </px-dropdown>
+                    </div>
+                </div>
+                <div class="datasource--list--row">
+                    <span class="label-container">Color</span>
+                    <ul>
+                        <template is="dom-repeat" items={{curColors}} id="colorbox">
+                            <li class="color--box-container">
+                                <div class="color--box float--left" style="background-color: [[item.color]];"></div>
+                                <div class="float--left pad-sm">[[item.val]]</div>
+                                <div style="clear:both;"></div>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </template>
+    <script type="text/javascript">
+        Polymer({
+            is: 'data-source-configuration',
+            properties: {
+                dataSourceList: {
+                    type: Array,
+                    notify: true,
+                },
+                data: {
+                    type: Object,
+                    notify: true,
+                    reflectToAttribute: true
+                },
+                curXaxis: {
+                    type: Array,
+                    notify: true,
+                    reflectToAttribute: true
+                },
+                curColumn: {
+                    type: Array,
+                    notify: true,
+                    reflectToAttribute: true
+                },
+                curColors: {
+                    type: Array,
+                    notify: true,
+                    reflectToAttribute: true
+                }
+            },
+            ready: function () {
+                this._getDataSourceList();
+                Polymer.RenderStatus.afterNextRender(this, function () {
+                    this._regListeners();
+                });
+            },
+            _getDataSourceList: function () {
+                var self = this;
+                /* Mock URL for APM
+                var mockURL =
+                     "scripts\/shared\/components\/datasource-configuration\/json\/datasource.json";*/
+
+                var mockURL =
+                    ".\/json\/datasource.json";
+                var argument = "";
+
+                this._getData(mockURL).then(function (data) {
+                    self.dataSourceList = data.datasources;
+                });
+            },
+            _regListeners: function () {
+                var self = this;
+                this.$.data_source_id.addEventListener('dropdown_content_value_changed', function (event) {
+
+                    /*
+                    Mock url in APM
+                    var mockURL =
+                         "scripts\/shared\/components\/datasource-configuration\/json\/x-axis-column-dropdown.json";*/
+
+                    var mockURL =
+                        ".\/json\/x-axis-column-dropdown.json";
+
+                    var argument = "";
+                    self._getData(mockURL, argument).then(function (data) {
+                        self.curXaxis = data.x_axis;
+                        self.curColumn = data.columns;
+
+                    });
+                });
+                this.$.x_axis_id.addEventListener('dropdown_content_value_changed', function () {
+
+                });
+                this.$.column_id.addEventListener('dropdown_content_value_changed', function (evt) {
+
+                    var filteredData = self.curColumn.filter(function (item) {
+                        if (item.val === event.detail.textValue) {
+                            return item;
+                        }
+                    });
+                    self.curColors = filteredData;
+
+                })
+
+            },
+            _getData: function () {
+                return window.px.dealer.getData.apply(window.px.dealer, arguments);
+            }
+
+        });
+    </script>
+</dom-module>
